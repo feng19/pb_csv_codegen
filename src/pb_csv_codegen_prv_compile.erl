@@ -52,17 +52,23 @@ compile(AppInfo) ->
     RouterFile = filename:join(AppDir, proplists:get_value(router, PbCsvOpts)),
     RouterFile0 = filename:basename(RouterFile, ".csv"),
     TargetErlDir = filename:join(AppDir, proplists:get_value(o_erl, PbCsvOpts)),
+    ensure_dir(TargetErlDir),
     ErlTarget = filename:join([TargetErlDir, RouterFile0 ++ ".erl"]),
+
+    TargetHrlDir = filename:join(AppDir, proplists:get_value(o_hrl, PbCsvOpts)),
+    ensure_dir(TargetHrlDir),
 
     case filelib:last_modified(RouterFile) > filelib:last_modified(ErlTarget) of
         true ->
-            gen_router(AppDir, RouterFile, RouterFile0, ErlTarget, TargetErlDir, ModuleNameSuffix, PbCsvOpts);
+            gen_router(AppDir, RouterFile, RouterFile0, ErlTarget,
+                TargetErlDir, TargetHrlDir, ModuleNameSuffix, PbCsvOpts);
         _ -> skip
     end,
 
     update_erl_first_files(TargetErlDir, AppDir, AppInfo).
 
-gen_router(AppDir, RouterFile, RouterFile0, ErlTarget, TargetErlDir, ModuleNameSuffix, PbCsvOpts) ->
+gen_router(AppDir, RouterFile, RouterFile0, ErlTarget,
+    TargetErlDir, TargetHrlDir, ModuleNameSuffix, PbCsvOpts) ->
     {ok, Binary} = file:read_file(RouterFile),
     ModPrefix = proplists:get_value(mod_prefix, PbCsvOpts),
     #{input_list := InputList0, output_list := OutputList0, protos := Protos} =
@@ -91,7 +97,6 @@ gen_router(AppDir, RouterFile, RouterFile0, ErlTarget, TargetErlDir, ModuleNameS
         {cmd_list, CmdList}
     ],
 
-    TargetHrlDir = filename:join(AppDir, proplists:get_value(o_hrl, PbCsvOpts)),
     HrlTarget = filename:join([TargetHrlDir, RouterFile0 ++ ".hrl"]),
     RouterHrlTplFile0 = proplists:get_value(router_hrl_tpl, PbCsvOpts),
     RouterHrlTplFile = bbmustache:parse_file(filename:join([AppDir, RouterHrlTplFile0])),
@@ -188,4 +193,15 @@ update_erl_first_files(TargetErlDir, AppDir, AppInfo) ->
                         dict:store(erl_first_files, ErlFirstFiles, OldOpts)
                 end,
             rebar_app_info:opts(AppInfo, NewOpts)
+    end.
+
+-spec ensure_dir(filelib:dirname()) -> 'ok' | {error, Reason :: file:posix()}.
+ensure_dir(OutDir) ->
+    %% Make sure that ebin/ exists and is on the path
+    case filelib:ensure_dir(filename:join(OutDir, "dummy.beam")) of
+        ok -> ok;
+        {error, eexist} ->
+            rebar_utils:abort("unable to ensure dir ~p, is it maybe a broken symlink?",
+                [OutDir]);
+        {error, Reason} -> {error, Reason}
     end.
