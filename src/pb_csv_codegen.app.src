@@ -1,0 +1,12 @@
+{application, pb_csv_codegen, [
+    {description, "A rebar plugin"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {applications, [kernel, stdlib]},
+    {env, []},
+    {modules, []},
+
+    {maintainers, ["feng19"]},
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
