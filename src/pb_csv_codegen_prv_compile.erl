@@ -111,7 +111,7 @@ gen_mods(AppDir, TargetErlDir, PbCsvOpts, Protos) ->
          FileName = MsgPrefix ++ ProtoName,
          ErlRenderData = [
              {proto_name, FileName},
-             {callback_list, CallbackList}
+             {callback_list, lists:reverse(CallbackList)}
          ],
 
          ErlTarget = filename:join([TargetErlDir, FileName ++ ".erl"]),
@@ -156,7 +156,7 @@ parse_csv_line(Line, ModuleNameSuffix, ModPrefix,
                 {callback, HandleFunc},
                 {req, MsgName}
             ],
-            Protos = maps:update_with(ProtoName, fun(List) -> [Callback | List] end, [], Protos0),
+            Protos = maps:update_with(ProtoName, fun(List) -> [Callback | List] end, [Callback], Protos0),
             Acc#{input_list => [InputData | InputList], protos =>  Protos}
     end.
 

@@ -7,7 +7,8 @@ init(State0) ->
     {ok, State1} = rebar3_gpb_prv_compile:init(State0),
     {ok, State2} = rebar3_gpb_prv_clean:init(State1),
     {ok, State3} = pb_csv_codegen_prv_compile:init(State2),
-    {ok, State3}.
+    {ok, State4} = pb_csv_codegen_prv_clean:init(State3),
+    {ok, State4}.
 
 test(Type) ->
     {ok, CWD} = file:get_cwd(),
